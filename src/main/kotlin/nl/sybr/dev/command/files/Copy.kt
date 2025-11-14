@@ -1,0 +1,61 @@
+package nl.sybr.dev.command.files
+
+import nl.sybr.dev.command.CommandResult
+import org.apache.commons.io.FileUtils
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
+import picocli.CommandLine
+import java.io.File
+import java.nio.file.Path
+import java.util.concurrent.Callable
+
+@CommandLine.Command(
+    name = "copy",
+    description = ["Copy files."],
+)
+class Copy : FilesCommand(), Callable<Int> {
+
+    @CommandLine.Option(
+        names = ["--operation"],
+        description = ["The moving operations to use."],
+        required = true
+    )
+    protected lateinit var operation: String
+
+    override fun call(): Int {
+        val commandResult = callWithEnv()
+        return commandResult.exitCode
+    }
+
+    override fun callWithEnv(): CommandResult {
+        logger.info("Copying with operation: $operation")
+
+        val matchList = eligibleFiles(commandContext.toPath())
+        val copies = matchList.stream()
+            .map { path -> FileCopy(path.toFile(), File(operate(path))) }
+            .peek { fileCopy -> logger.info("Copying file: ${fileCopy.source} to: ${fileCopy.target}") }
+            .toList()
+        matchList.stream()
+            .forEach { path -> FileUtils.copyFile(path.toFile(), File(operate(path))) }
+
+        return CopyResult(0, copies)
+    }
+
+    private fun operate(path: Path): String {
+        return String.format(operation, path.toString())
+    }
+
+    companion object {
+        val logger: Logger = LoggerFactory.getLogger(Copy::class.java)
+
+        @JvmStatic
+        fun main(args: Array<String>) {
+            val exitCode = CommandLine(Copy()).execute(*args)
+            System.exit(exitCode)
+        }
+    }
+}
+
+data class CopyResult(override val exitCode: Int, val copies: List<FileCopy>): CommandResult(exitCode)
+
+data class FileCopy(val source: File, val target: File)

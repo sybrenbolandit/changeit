@@ -63,6 +63,7 @@
 
     <build>
         <sourceDirectory>${project.basedir}/src/main/kotlin</sourceDirectory>
+        <finalName>changeit</finalName>
 
         <plugins>
             <plugin>
