@@ -7,12 +7,13 @@ import org.slf4j.LoggerFactory
 import picocli.CommandLine
 import java.io.File
 import java.nio.file.Path
+import java.util.concurrent.Callable
 
 @CommandLine.Command(
     name = "move",
     description = ["Move files."],
 )
-class Move : FilesCommand() {
+class Move : FilesCommand(), Callable<Int>{
 
     @CommandLine.Option(
         names = ["--operation"],
@@ -20,6 +21,11 @@ class Move : FilesCommand() {
         required = true
     )
     protected lateinit var operation: String
+
+    override fun call(): Int {
+        val commandResult = callWithEnv()
+        return commandResult.exitCode
+    }
 
     override fun callWithEnv(): CommandResult {
         logger.info("Moving with operation: $operation")

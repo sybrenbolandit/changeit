@@ -7,12 +7,13 @@ import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import picocli.CommandLine
 import java.io.File
+import java.util.concurrent.Callable
 
 @CommandLine.Command(
     name = "add",
     description = ["Add a file."],
 )
-class Add : CommandContext() {
+class Add : CommandContext(), Callable<Int> {
 
     @CommandLine.Option(
         names = ["--source"],
@@ -27,6 +28,11 @@ class Add : CommandContext() {
         required = true
     )
     protected lateinit var target: String
+
+    override fun call(): Int {
+        val commandResult = callWithEnv()
+        return commandResult.exitCode
+    }
 
     override fun callWithEnv(): CommandResult {
         logger.info("Adding file: $sourceFile")

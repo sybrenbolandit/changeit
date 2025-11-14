@@ -5,13 +5,19 @@ import org.apache.commons.io.FileUtils
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import picocli.CommandLine
+import java.util.concurrent.Callable
 import kotlin.io.path.absolutePathString
 
 @CommandLine.Command(
     name = "delete",
     description = ["Delete files."],
 )
-class Delete : FilesCommand() {
+class Delete : FilesCommand(), Callable<Int> {
+
+    override fun call(): Int {
+        val commandResult = callWithEnv()
+        return commandResult.exitCode
+    }
 
     override fun callWithEnv(): CommandResult {
 

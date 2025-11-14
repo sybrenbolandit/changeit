@@ -14,7 +14,7 @@ import java.nio.file.SimpleFileVisitor
 import java.nio.file.attribute.BasicFileAttributes
 import java.util.EnumSet
 
-open abstract class FilesCommand : CommandContext() {
+abstract class FilesCommand : CommandContext() {
 
     @CommandLine.Option(
         names = ["--files"],

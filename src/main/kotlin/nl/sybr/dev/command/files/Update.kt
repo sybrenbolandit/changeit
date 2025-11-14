@@ -8,12 +8,13 @@ import picocli.CommandLine
 import java.io.File
 import java.nio.file.Files
 import java.nio.file.Path
+import java.util.concurrent.Callable
 
 @CommandLine.Command(
     name = "update",
     description = ["String update lines of files."],
 )
-class Update : FilesCommand() {
+class Update : FilesCommand(), Callable<Int> {
 
     @CommandLine.Option(
         names = ["--matcher"],
@@ -29,6 +30,11 @@ class Update : FilesCommand() {
     )
     protected lateinit var replacement: String
 
+
+    override fun call(): Int {
+        val commandResult = callWithEnv()
+        return commandResult.exitCode
+    }
 
     override fun callWithEnv(): CommandResult {
         logger.info("Updating with matcher: $matcher, and replacement: $replacement")

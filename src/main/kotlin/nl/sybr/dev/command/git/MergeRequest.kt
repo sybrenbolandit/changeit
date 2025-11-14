@@ -7,12 +7,13 @@ import org.eclipse.jgit.transport.PushResult
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import picocli.CommandLine
+import java.util.concurrent.Callable
 
 @CommandLine.Command(
     name = "mr",
     description = ["Create a merge request."],
 )
-class MergeRequest : CommandContext() {
+class MergeRequest : CommandContext(), Callable<Int> {
 
     @CommandLine.Option(
         names = ["--gitlevel"],
@@ -27,6 +28,11 @@ class MergeRequest : CommandContext() {
     )
     protected var commitMessage: String? = null
 
+
+    override fun call(): Int {
+        val commandResult = callWithEnv()
+        return commandResult.exitCode
+    }
 
     override fun callWithEnv(): CommandResult {
         val git = gitOpen()

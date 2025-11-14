@@ -7,12 +7,13 @@ import org.slf4j.LoggerFactory
 import picocli.CommandLine
 import java.io.File
 import java.nio.file.Path
+import java.util.concurrent.Callable
 
 @CommandLine.Command(
     name = "copy",
     description = ["Copy files."],
 )
-class Copy : FilesCommand() {
+class Copy : FilesCommand(), Callable<Int> {
 
     @CommandLine.Option(
         names = ["--operation"],
@@ -20,6 +21,11 @@ class Copy : FilesCommand() {
         required = true
     )
     protected lateinit var operation: String
+
+    override fun call(): Int {
+        val commandResult = callWithEnv()
+        return commandResult.exitCode
+    }
 
     override fun callWithEnv(): CommandResult {
         logger.info("Copying with operation: $operation")
