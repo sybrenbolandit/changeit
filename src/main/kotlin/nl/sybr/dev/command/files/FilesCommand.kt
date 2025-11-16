@@ -1,20 +1,15 @@
 package nl.sybr.dev.command.files
 
-import nl.sybr.dev.command.CommandContext
+import nl.sybr.dev.command.CommandArg
+import nl.sybr.dev.command.HistoryCommand
 import org.slf4j.LoggerFactory
 import picocli.CommandLine
 import java.io.IOException
-import java.nio.file.FileSystems
-import java.nio.file.FileVisitOption
-import java.nio.file.FileVisitResult
-import java.nio.file.FileVisitor
-import java.nio.file.Files
-import java.nio.file.Path
-import java.nio.file.SimpleFileVisitor
+import java.nio.file.*
 import java.nio.file.attribute.BasicFileAttributes
-import java.util.EnumSet
+import java.util.*
 
-abstract class FilesCommand : CommandContext() {
+abstract class FilesCommand : HistoryCommand() {
 
     @CommandLine.Option(
         names = ["--files"],
@@ -55,6 +50,11 @@ abstract class FilesCommand : CommandContext() {
         logger.info("Number of eligible files: ${matchesList.size}")
 
         return matchesList
+    }
+
+    protected fun logFileFilter(args: List<CommandArg>): List<CommandArg> {
+        val extendedArgs = args.plus(CommandArg("files", fileFilter))
+        return if (nonRecursive) extendedArgs.plus(CommandArg("nonRecursive", nonRecursive.toString())) else extendedArgs
     }
 
     companion object {

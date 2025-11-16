@@ -1,5 +1,8 @@
 package nl.sybr.dev.command.files
 
+import nl.sybr.dev.command.CommandArg
+import nl.sybr.dev.command.CommandConfig
+import nl.sybr.dev.command.CommandDescription
 import nl.sybr.dev.command.CommandResult
 import org.apache.commons.io.FileUtils
 import org.slf4j.Logger
@@ -22,12 +25,18 @@ class Copy : FilesCommand(), Callable<Int> {
     )
     protected lateinit var operation: String
 
-    override fun call(): Int {
-        val commandResult = callWithEnv()
-        return commandResult.exitCode
+    override fun logCommand(): CommandConfig {
+        return CommandConfig(
+            "copy",
+            logFileFilter(
+                mutableListOf(
+                    CommandArg("operation", operation)
+                )
+            )
+        )
     }
 
-    override fun callWithEnv(): CommandResult {
+    override fun callCommand(): CommandResult {
         logger.info("Copying with operation: $operation")
 
         val matchList = eligibleFiles(commandContext.toPath())
@@ -39,6 +48,15 @@ class Copy : FilesCommand(), Callable<Int> {
             .forEach { path -> FileUtils.copyFile(path.toFile(), File(operate(path))) }
 
         return CopyResult(0, copies)
+    }
+
+    override fun revert(commandDescription: CommandDescription) {
+        val copyResult = commandDescription.result as CopyResult
+        copyResult.copies.stream()
+            .forEach { fileCopy ->
+                FileUtils.delete(fileCopy.target)
+                logger.info("Deleted file: ${fileCopy.target}")
+            }
     }
 
     private fun operate(path: Path): String {
