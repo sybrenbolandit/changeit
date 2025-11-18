@@ -1,11 +1,11 @@
 package nl.sybr.dev
 
-import nl.sybr.dev.command.files.Add
-import nl.sybr.dev.command.files.Copy
-import nl.sybr.dev.command.files.Delete
-import nl.sybr.dev.command.files.Move
-import nl.sybr.dev.command.files.Update
+import nl.sybr.dev.command.files.*
+import nl.sybr.dev.command.git.GitFresh
 import nl.sybr.dev.command.git.MergeRequest
+import nl.sybr.dev.command.history.History
+import nl.sybr.dev.command.history.Redo
+import nl.sybr.dev.command.history.Revert
 import picocli.CommandLine
 
 @CommandLine.Command(
@@ -13,12 +13,16 @@ import picocli.CommandLine
     description = ["ChangeIt container command"],
     mixinStandardHelpOptions = true,
     subcommands = [
+        GitFresh::class,
         Add::class,
         Copy::class,
         Delete::class,
         Move::class,
         Update::class,
-        MergeRequest::class
+        MergeRequest::class,
+        History::class,
+        Revert::class,
+        Redo::class,
     ]
 )
 class Application : Runnable {
@@ -29,7 +33,7 @@ class Application : Runnable {
     companion object {
         @JvmStatic
         fun main(args: Array<String>) {
-            CommandLine.run(Application(), *args)
+            CommandLine(Application()).execute(*args)
         }
     }
 }

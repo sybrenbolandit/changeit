@@ -1,7 +1,10 @@
 package nl.sybr.dev.command.files
 
-import nl.sybr.dev.command.CommandContext
+import nl.sybr.dev.command.CommandArg
+import nl.sybr.dev.command.CommandConfig
+import nl.sybr.dev.command.CommandDescription
 import nl.sybr.dev.command.CommandResult
+import nl.sybr.dev.command.HistoryCommand
 import org.apache.commons.io.FileUtils
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
@@ -13,7 +16,7 @@ import java.util.concurrent.Callable
     name = "add",
     description = ["Add a file."],
 )
-class Add : CommandContext(), Callable<Int> {
+class Add : HistoryCommand(), Callable<Int> {
 
     @CommandLine.Option(
         names = ["--source"],
@@ -29,12 +32,19 @@ class Add : CommandContext(), Callable<Int> {
     )
     protected lateinit var target: String
 
-    override fun call(): Int {
-        val commandResult = callWithEnv()
-        return commandResult.exitCode
+    override fun logCommand(): CommandConfig {
+        return CommandConfig(
+            "add",
+            logContext(
+                mutableListOf(
+                    CommandArg("source", sourceFile.toPath().toString()),
+                    CommandArg("target", target),
+                )
+            )
+        )
     }
 
-    override fun callWithEnv(): CommandResult {
+    override fun callCommand(): CommandResult {
         logger.info("Adding file: $sourceFile")
 
         val targetFile = File(commandContext, target)
@@ -42,6 +52,12 @@ class Add : CommandContext(), Callable<Int> {
         logger.info("New file location: $targetFile")
 
         return AddResult(0, targetFile.absolutePath)
+    }
+
+    override fun revert(commandDescription: CommandDescription) {
+        val addResult = commandDescription.result as AddResult
+        FileUtils.delete(File(addResult.targetLocation))
+        logger.info("Deleted file: ${addResult.targetLocation}")
     }
 
     companion object {
@@ -55,4 +71,4 @@ class Add : CommandContext(), Callable<Int> {
     }
 }
 
-data class AddResult(override val exitCode: Int, val targetLocation: String): CommandResult(exitCode)
+data class AddResult(override val exitCode: Int, val targetLocation: String) : CommandResult(exitCode)

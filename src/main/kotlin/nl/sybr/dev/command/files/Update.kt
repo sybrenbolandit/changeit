@@ -1,5 +1,8 @@
 package nl.sybr.dev.command.files
 
+import nl.sybr.dev.command.CommandArg
+import nl.sybr.dev.command.CommandConfig
+import nl.sybr.dev.command.CommandDescription
 import nl.sybr.dev.command.CommandResult
 import org.apache.commons.io.FileUtils
 import org.slf4j.Logger
@@ -31,12 +34,19 @@ class Update : FilesCommand(), Callable<Int> {
     protected lateinit var replacement: String
 
 
-    override fun call(): Int {
-        val commandResult = callWithEnv()
-        return commandResult.exitCode
+    override fun logCommand(): CommandConfig {
+        return CommandConfig(
+            "update",
+            logFileFilter(
+                mutableListOf(
+                    CommandArg("matcher", matcher),
+                    CommandArg("replacement", replacement)
+                )
+            )
+        )
     }
 
-    override fun callWithEnv(): CommandResult {
+    override fun callCommand(): CommandResult {
         logger.info("Updating with matcher: $matcher, and replacement: $replacement")
 
         val matchList = eligibleFiles(commandContext.toPath())
@@ -52,6 +62,19 @@ class Update : FilesCommand(), Callable<Int> {
             .forEach { path -> replace(path.toFile(), matcher, replacement) }
 
         return UpdateResult(0, matcher, replacement, updatedFiles)
+    }
+
+    override fun revert(commandDescription: CommandDescription) {
+        val updateResult = commandDescription.result as UpdateResult
+        updateResult.updatedFiles.stream()
+            .forEach { updatedFile ->
+                if (updatedFile.originalContent != null) {
+                    Files.write(updatedFile.file.toPath(), updatedFile.originalContent.toByteArray())
+                } else {
+                    replace(updatedFile.file, updateResult.replacement, updateResult.matcher)
+                }
+                logger.info("Unupdated file: ${updatedFile.file.name}")
+            }
     }
 
     private fun replace(file: File, matcher: String, replacement: String) {

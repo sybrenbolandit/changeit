@@ -1,5 +1,8 @@
 package nl.sybr.dev.command.files
 
+import nl.sybr.dev.command.CommandArg
+import nl.sybr.dev.command.CommandConfig
+import nl.sybr.dev.command.CommandDescription
 import nl.sybr.dev.command.CommandResult
 import org.apache.commons.io.FileUtils
 import org.slf4j.Logger
@@ -22,12 +25,18 @@ class Move : FilesCommand(), Callable<Int>{
     )
     protected lateinit var operation: String
 
-    override fun call(): Int {
-        val commandResult = callWithEnv()
-        return commandResult.exitCode
+    override fun logCommand(): CommandConfig {
+        return CommandConfig(
+            "move",
+            logFileFilter(
+                mutableListOf(
+                    CommandArg("operation", operation)
+                )
+            )
+        )
     }
 
-    override fun callWithEnv(): CommandResult {
+    override fun callCommand(): CommandResult {
         logger.info("Moving with operation: $operation")
 
         val matchList = eligibleFiles(commandContext.toPath())
@@ -42,6 +51,16 @@ class Move : FilesCommand(), Callable<Int>{
             }
 
         return MoveResult(0, moves)
+    }
+
+    override fun revert(commandDescription: CommandDescription) {
+        val moveResult = commandDescription.result as MoveResult
+        moveResult.moves.stream()
+            .forEach { fileMove ->
+                FileUtils.copyFile(fileMove.target, fileMove.source)
+                FileUtils.delete(fileMove.target)
+                logger.info("Moving file back from: ${fileMove.target} to: ${fileMove.source}")
+            }
     }
 
     private fun operate(path: Path): String {

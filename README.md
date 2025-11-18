@@ -24,3 +24,12 @@ cit update --files=CODEOWNERS --matcher='@sybren' --replacement'@sybr'
 cit mr --gitlevel=mr
 ```
 
+## Controls
+With some other commands you get more control on these powerfull file commands.
+
+```shell
+cit history show
+cit revert
+cit redo
+cit history delete -n 3
+```
